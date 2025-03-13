@@ -34,7 +34,7 @@ class Program
                 break;
             }
         }
-        
+
         if (string.IsNullOrEmpty(encodedURL))
         {
             Console.WriteLine("No valid share identifier found in the URL.");
@@ -77,8 +77,8 @@ class Program
         };
 
         var parsedQuery = QueryHelpers.ParseQuery(redirectUri.Query);
-        string rebuiltQuery = string.Join("&", 
-            parsedQuery.SelectMany(kvp => 
+        string rebuiltQuery = string.Join("&",
+            parsedQuery.SelectMany(kvp =>
                 kvp.Value.Select(value => $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(value)}")));
         uriBuilder.Query = rebuiltQuery;
 
