@@ -23,8 +23,29 @@ class Program
             return;
         }
 
+        string encodedURL = string.Empty;
+        foreach (string segment in initialUri.Segments)
+        {
+            string trimmedSegment = segment.Trim('/');
+            if (trimmedSegment.StartsWith("s!"))
+            {
+                encodedURL = trimmedSegment;
+                break;
+            }
+        }
+        
+        if (string.IsNullOrEmpty(encodedURL))
+        {
+            Console.WriteLine("No valid share identifier found in the URL.");
+            return;
+        }
+
+        string apiUrl = $"https://api.onedrive.com/v1.0/shares/{encodedURL}/root/content";
+        Console.WriteLine("API URL: " + apiUrl);
+
         using HttpClient client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
         HttpResponseMessage response;
+
         try
         {
             response = await client.GetAsync(initialUri);
