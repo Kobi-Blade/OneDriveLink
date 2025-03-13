@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
+using Microsoft.AspNetCore.WebUtilities;
 
 class Program
 {
@@ -75,8 +76,11 @@ class Program
             Path = redirectUri.AbsolutePath.Replace("redir", "download")
         };
 
-        var queryParams = HttpUtility.ParseQueryString(redirectUri.Query);
-        uriBuilder.Query = queryParams.ToString();
+        var parsedQuery = QueryHelpers.ParseQuery(redirectUri.Query);
+        string rebuiltQuery = string.Join("&", 
+            parsedQuery.SelectMany(kvp => 
+                kvp.Value.Select(value => $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(value)}")));
+        uriBuilder.Query = rebuiltQuery;
 
         if (uriBuilder.Port == 443)
         {
