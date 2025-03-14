@@ -74,7 +74,6 @@ namespace OneDriveLinkResolver
                 Console.WriteLine("Failed to follow redirects: " + ex.Message);
                 return url;
             }
-            // The RequestMessage.RequestUri holds the final resolved URL.
             return response.RequestMessage?.RequestUri ?? url;
         }
 
@@ -85,8 +84,6 @@ namespace OneDriveLinkResolver
                 string path = $"u!{details.Redeem}/driveitem";
                 return new Uri(PersonalApiEntryPoint, path);
             }
-            // Construct the URL using the standard OneDrive API endpoint:
-            // Example: https://api.onedrive.com/v1.0/drives/{containerId}/items/{resid}
             Uri baseUri = new Uri(ApiEntryPoint, $"{details.ContainerId}/items/{details.Resid}");
             if (!string.IsNullOrEmpty(details.AuthKey))
             {
