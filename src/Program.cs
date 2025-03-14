@@ -7,7 +7,7 @@ namespace OneDriveLinkResolver
     {
         static async Task Main()
         {
-            Console.Write("Please enter shared OneDrive URL: ");
+            Console.Write("Please enter shared URL (OneDrive/SharePoint): ");
             string? inputUrl = Console.ReadLine()?.Trim();
 
             if (string.IsNullOrEmpty(inputUrl))
@@ -22,20 +22,30 @@ namespace OneDriveLinkResolver
                 return;
             }
 
-            string encodedUrl = OneDriveUrlExtractor.ExtractEncodedUrl(initialUri);
-            if (string.IsNullOrEmpty(encodedUrl))
+            if (LinkTypeHelper.IsSharePointLink(initialUri))
             {
-                Console.WriteLine("No valid share identifier found in the URL.");
-                return;
+                await SharePointLinkProcessor.ProcessSharePointUrlAsync(initialUri);
             }
-
-            string apiUrl = $"https://api.onedrive.com/v1.0/shares/{encodedUrl}/root/content";
-            Console.WriteLine("API URL: " + apiUrl);
-
-            string downloadUrl = await RedirectUrlProcessor.GetDownloadUrlAsync(initialUri);
-            if (!string.IsNullOrEmpty(downloadUrl))
+            else if (LinkTypeHelper.IsOneDriveLink(initialUri))
             {
-                Console.WriteLine("Download URL: " + downloadUrl);
+                string encodedUrl = OneDriveUrlExtractor.ExtractEncodedUrl(initialUri);
+                if (string.IsNullOrEmpty(encodedUrl))
+                {
+                    Console.WriteLine("No valid share identifier found in the URL.");
+                    return;
+                }
+                string apiUrl = $"https://api.onedrive.com/v1.0/shares/{encodedUrl}/root/content";
+                Console.WriteLine("API URL: " + apiUrl);
+
+                string downloadUrl = await RedirectUrlProcessor.GetDownloadUrlAsync(initialUri);
+                if (!string.IsNullOrEmpty(downloadUrl))
+                {
+                    Console.WriteLine("Download URL: " + downloadUrl);
+                }
+            }
+            else
+            {
+                Console.WriteLine("The provided URL does not match known OneDrive or SharePoint patterns.");
             }
 
             Console.WriteLine("Press any key to exit...");
