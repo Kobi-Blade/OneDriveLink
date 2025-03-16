@@ -1,35 +1,68 @@
-# OneDrive Link
+# OneDriveLink
 
-A simple C# console application that processes a user-provided URL, into a direct download link for OneDrive.
+A simple C# console application that processes a user-provided URL into a direct download link for OneDrive.
 
 ## Prerequisites
 
 - [.NET 8.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0/runtime)
 
-## Getting Started
+## Features
 
-### Clone the Repository
+- Convert OneDrive shared links to direct download links
+- Handle SharePoint links to extract download URLs
+- Argument mode for processing URLs from the command line
+- Error handling and logging
+
+## Usage
+
+### Interactive Mode
+
+When you run the application without any arguments, it will prompt you to enter a OneDrive or SharePoint shared URL.
+
+### Argument Mode
+
+You can also run the application by providing the URLs as arguments. This mode is useful for automated scripts and batch processing.
 
 ```bash
-git clone https://github.com/Kobi-Blade/OneDriveLink.git
-cd OneDriveLink
+.\OneDriveLink.exe "link1" "link2" "link3"
 ```
 
-### Build the Application
+### Redirecting Output and Error Logs
 
-Use the dotnet CLI tool to build the project:
+To capture the output and error logs, you can redirect them to files as follows:
+
+- Redirect standard output to a file:
+
+```bash
+.\OneDriveLink.exe "link1" "link2" "link3" > output.txt
+```
+
+- Redirect error output to a file:
+
+```bash
+.\OneDriveLink.exe "link1" "link2" "link3" 2> errors.txt
+```
+
+- Redirect both standard output and error output to separate files:
+
+```bash
+.\OneDriveLink.exe "link1" "link2" "link3" > output.txt 2> errors.txt
+```
+
+- Redirect both standard output and error output to the same file:
+
+```bash
+.\OneDriveLink.exe "link1" "link2" "link3" > all_output.txt 2>&1
+```
+
+### Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request on GitHub.
+
+### Build Project
+
+This is a .NET 8.0 project and it ensures platform-independent practices for full Linux support. To compile, use the following command:
 
 ```bash
 dotnet build
 ```
-
-### Run the Application
-
-When prompted, paste in your URL (for example, https://1drv.ms/u/s!xxx) and press Enter.
-The program will process the URL, handle any redirection, and output the direct download URL.
-
-## How It Works
-
-1. User Input and Validation: The application starts by asking for a URL, removes any extra whitespace, and uses Uri.TryCreate to verify that it is a valid absolute URL.
-2. HTTP Request with Redirect Disabled: A HttpClientHandler with AllowAutoRedirect set to false is used to send a GET request. This allows the program to inspect the HTTP response for redirection (status codes 302, 301, etc.).
-3. Processing the Redirect: If a redirect is detected, the application extracts the Location header and ensures it is not null. It then utilizes a UriBuilder to create the download URL.
