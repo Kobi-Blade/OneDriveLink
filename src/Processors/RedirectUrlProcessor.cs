@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace OneDriveLinkResolver
+namespace OneDriveLink.Processors
 {
     public static class RedirectUrlProcessor
     {

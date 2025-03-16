@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 
-namespace OneDriveLinkResolver
+namespace OneDriveLink.Models
 {
     public record SharePointAccessDetails(string ContainerId, string Resid, string AuthKey, string Redeem)
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace OneDriveLinkResolver
+namespace OneDriveLink.Helpers
 {
     public static class LinkTypeHelper
     {

@@ -4,8 +4,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using OneDriveLink.Models;
 
-namespace OneDriveLinkResolver
+namespace OneDriveLink.Processors
 {
     public static class SharePointLinkProcessor
     {
@@ -65,7 +66,7 @@ namespace OneDriveLinkResolver
                 }
                 else
                 {
-                    Console.WriteLine(downloadUrl); // Echo the download URL in argument mode
+                    Console.WriteLine(downloadUrl);
                 }
             }
             catch (Exception ex)
