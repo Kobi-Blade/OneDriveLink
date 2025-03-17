@@ -23,12 +23,12 @@ namespace OneDriveLink.Helpers
             else
                 Console.Error.WriteLine(message);
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// Logs download url.
         /// </summary>
         public static void LogUrl(string message, bool isArgumentMode)
-		{
+        {
             if (!isArgumentMode)
                 Console.WriteLine("Download URL: " + message);
             else

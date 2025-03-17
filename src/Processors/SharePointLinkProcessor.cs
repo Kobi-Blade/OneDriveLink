@@ -52,7 +52,7 @@ namespace OneDriveLink.Processors
                 var downloadUrl = downloadUrlProperty.GetString() ?? string.Empty;
 
                 Logger.LogUrl(downloadUrl, isArgumentMode);
-				
+
             }
             catch (Exception ex)
             {
@@ -74,7 +74,7 @@ namespace OneDriveLink.Processors
             }
             catch (Exception ex)
             {
-				Logger.LogError($"Failed to follow redirects: {ex.Message}", isArgumentMode);
+                Logger.LogError($"Failed to follow redirects: {ex.Message}", isArgumentMode);
                 return url;
             }
 

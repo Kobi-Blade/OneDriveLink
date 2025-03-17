@@ -16,13 +16,13 @@ namespace OneDriveLink.Processors
             {
                 if (string.IsNullOrEmpty(inputUrl))
                 {
-					Logger.LogInfo("No URL entered.", isArgumentMode);
+                    Logger.LogInfo("No URL entered.", isArgumentMode);
                     return;
                 }
 
                 if (!Uri.TryCreate(inputUrl, UriKind.Absolute, out Uri? initialUri))
                 {
-					Logger.LogInfo("Invalid URL entered.", isArgumentMode);
+                    Logger.LogInfo("Invalid URL entered.", isArgumentMode);
                     return;
                 }
 
