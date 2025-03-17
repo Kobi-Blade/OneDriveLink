@@ -57,7 +57,7 @@ To capture the output and error logs, you can redirect them to files as follows:
 
 ### Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request on GitHub.
+Contributions are welcome! Please open an issue or submit a pull request on GitHub, use experimental branch for pull requests.
 
 ### Build Project
 
