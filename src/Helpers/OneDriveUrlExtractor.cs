@@ -11,14 +11,18 @@ namespace OneDriveLink.Helpers
         /// <returns>The encoded share identifier if found; otherwise, an empty string.</returns>
         public static string ExtractEncodedUrl(Uri uri)
         {
-            foreach (string segment in uri.Segments)
+            if (uri == null)
+                throw new ArgumentNullException(nameof(uri));
+
+            foreach (var segment in uri.Segments)
             {
-                string trimmedSegment = segment.Trim('/');
-                if (trimmedSegment.StartsWith("s!"))
+                var trimmedSegment = segment.Trim('/');
+                if (trimmedSegment.StartsWith("s!", StringComparison.OrdinalIgnoreCase))
                 {
                     return trimmedSegment;
                 }
             }
+
             return string.Empty;
         }
     }

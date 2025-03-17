@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using OneDriveLink.Helpers;
 using OneDriveLink.Models;
 
 namespace OneDriveLink.Processors
@@ -16,69 +17,46 @@ namespace OneDriveLink.Processors
         private const string AppId = "1141147648";
         private const string AppUuid = "5cbed6ac-a083-4e14-b191-b4ba07653de2";
 
+        /// <summary>
+        /// Resolves the SharePoint URL by following redirects and processing the response.
+        /// </summary>
         public static async Task ProcessSharePointUrlAsync(Uri url, bool isArgumentMode = false)
         {
             try
             {
-                Uri finalUrl = await FollowRedirectsAsync(url, isArgumentMode);
-                if (!isArgumentMode) Console.WriteLine("Resolved URL after redirection: " + finalUrl);
-
-                SharePointAccessDetails accessDetails = SharePointAccessDetails.FromUri(finalUrl);
-
-                using HttpClient client = new HttpClient();
+                var finalUrl = await FollowRedirectsAsync(url, isArgumentMode);
+                var accessDetails = SharePointAccessDetails.FromUri(finalUrl);
+                using var client = new HttpClient();
 
                 if (!string.IsNullOrEmpty(accessDetails.Redeem))
                 {
                     await GetBadgerTokenAsync(client, isArgumentMode);
                 }
 
-                Uri apiUrl = CreateApiUrl(accessDetails);
-                if (!isArgumentMode) Console.WriteLine("Constructed API URL: " + apiUrl);
+                var apiUrl = CreateApiUrl(accessDetails);
+                Logger.LogInfo($"API URL: {apiUrl}", isArgumentMode);
 
-                HttpResponseMessage response;
-                try
+                var response = await client.GetAsync(apiUrl);
+                response.EnsureSuccessStatusCode();
+
+                var jsonResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+                if (!jsonResponse.TryGetProperty("name", out var fileNameProperty) ||
+                    !jsonResponse.TryGetProperty("@content.downloadUrl", out var downloadUrlProperty))
                 {
-                    response = await client.GetAsync(apiUrl);
-                    response.EnsureSuccessStatusCode();
-                }
-                catch (HttpRequestException ex)
-                {
-                    if (!isArgumentMode) Console.WriteLine("Error accessing API URL: " + ex.Message);
-                    else Console.Error.WriteLine("Error accessing API URL: " + ex.Message);
+                    Logger.LogError("Unexpected response from API.", isArgumentMode);
                     return;
                 }
 
-                JsonElement jsonResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
-                if (!jsonResponse.TryGetProperty("name", out JsonElement fileNameProperty) ||
-                    !jsonResponse.TryGetProperty("@content.downloadUrl", out JsonElement downloadUrlProperty))
-                {
-                    if (!isArgumentMode) Console.WriteLine("Unexpected response from API.");
-                    else Console.Error.WriteLine("Unexpected response from API.");
-                    return;
-                }
-                string fileName = fileNameProperty.GetString() ?? "downloaded_file";
-                string downloadUrl = downloadUrlProperty.GetString() ?? string.Empty;
+                var fileName = fileNameProperty.GetString() ?? "downloaded_file";
+                var downloadUrl = downloadUrlProperty.GetString() ?? string.Empty;
 
-                if (!isArgumentMode)
-                {
-                    Console.WriteLine("Resolved file name: " + fileName);
-                    Console.WriteLine("Download URL: " + downloadUrl);
-                }
-                else
-                {
-                    Console.WriteLine(downloadUrl);
-                }
+                Logger.LogUrl(downloadUrl, isArgumentMode);
+				
             }
             catch (Exception ex)
             {
-                if (!isArgumentMode)
-                {
-                    Console.WriteLine($"An error occurred while processing the SharePoint URL: {url}. Error: {ex.Message}");
-                }
-                else
-                {
-                    Console.Error.WriteLine($"Error processing SharePoint URL: {url}. Error: {ex.Message}");
-                }
+                Logger.LogError($"Error processing SharePoint URL: {url}. Error: {ex.Message}", isArgumentMode);
             }
         }
 
@@ -87,18 +65,19 @@ namespace OneDriveLink.Processors
         /// </summary>
         private static async Task<Uri> FollowRedirectsAsync(Uri url, bool isArgumentMode)
         {
-            using HttpClient client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true });
+            using var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true });
             HttpResponseMessage response;
+
             try
             {
                 response = await client.GetAsync(url);
             }
             catch (Exception ex)
             {
-                if (!isArgumentMode) Console.WriteLine("Failed to follow redirects: " + ex.Message);
-                else Console.Error.WriteLine("Failed to follow redirects: " + ex.Message);
+				Logger.LogError($"Failed to follow redirects: {ex.Message}", isArgumentMode);
                 return url;
             }
+
             return response.RequestMessage?.RequestUri ?? url;
         }
 
@@ -106,19 +85,25 @@ namespace OneDriveLink.Processors
         {
             if (!string.IsNullOrEmpty(details.Redeem))
             {
-                string path = $"u!{details.Redeem}/driveitem";
+                var path = $"u!{details.Redeem}/driveitem";
                 return new Uri(PersonalApiEntryPoint, path);
             }
-            Uri baseUri = new Uri(ApiEntryPoint, $"{details.ContainerId}/items/{details.Resid}");
+
+            var baseUri = new Uri(ApiEntryPoint, $"{details.ContainerId}/items/{details.Resid}");
+
             if (!string.IsNullOrEmpty(details.AuthKey))
             {
                 var query = new System.Collections.Generic.Dictionary<string, string?> { { "authkey", details.AuthKey } };
-                string urlWithQuery = QueryHelpers.AddQueryString(baseUri.ToString(), query);
+                var urlWithQuery = QueryHelpers.AddQueryString(baseUri.ToString(), query);
                 return new Uri(urlWithQuery);
             }
+
             return baseUri;
         }
 
+        /// <summary>
+        /// Retrieves the Badger token for authentication.
+        /// </summary>
         private static async Task GetBadgerTokenAsync(HttpClient client, bool isArgumentMode)
         {
             client.DefaultRequestHeaders.Remove("AppId");
@@ -126,6 +111,7 @@ namespace OneDriveLink.Processors
             var data = new { appId = AppUuid };
 
             HttpResponseMessage response;
+
             try
             {
                 response = await client.PostAsJsonAsync(BadgerUrl, data);
@@ -133,20 +119,19 @@ namespace OneDriveLink.Processors
             }
             catch (HttpRequestException ex)
             {
-                if (!isArgumentMode) Console.WriteLine("Error retrieving token: " + ex.Message);
-                else Console.Error.WriteLine("Error retrieving token: " + ex.Message);
+                Logger.LogError($"Error retrieving token: {ex.Message}", isArgumentMode);
                 return;
             }
 
-            JsonElement jsonResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
-            if (!jsonResponse.TryGetProperty("token", out JsonElement tokenElement))
+            var jsonResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+            if (!jsonResponse.TryGetProperty("token", out var tokenElement))
             {
-                if (!isArgumentMode) Console.WriteLine("Token not found in response.");
-                else Console.Error.WriteLine("Token not found in response.");
+                Logger.LogError("Token not found in response.", isArgumentMode);
                 return;
             }
-            string token = tokenElement.GetString() ?? "";
 
+            var token = tokenElement.GetString() ?? string.Empty;
             client.DefaultRequestHeaders.Remove("Authorization");
             client.DefaultRequestHeaders.Add("Authorization", $"Badger {token}");
             client.DefaultRequestHeaders.Remove("Prefer");

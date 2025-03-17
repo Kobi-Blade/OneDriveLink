@@ -6,19 +6,23 @@ namespace OneDriveLink.Processors
 {
     public static class UrlProcessor
     {
+        /// <summary>
+        /// Processes the provided URL by identifying whether it's a SharePoint or OneDrive link,
+        /// and handling it accordingly.
+        /// </summary>
         public static async Task ProcessUrl(string? inputUrl, bool isArgumentMode)
         {
             try
             {
                 if (string.IsNullOrEmpty(inputUrl))
                 {
-                    if (!isArgumentMode) Console.WriteLine("No URL entered.");
+					Logger.LogInfo("No URL entered.", isArgumentMode);
                     return;
                 }
 
                 if (!Uri.TryCreate(inputUrl, UriKind.Absolute, out Uri? initialUri))
                 {
-                    if (!isArgumentMode) Console.WriteLine("Invalid URL entered.");
+					Logger.LogInfo("Invalid URL entered.", isArgumentMode);
                     return;
                 }
 
@@ -31,44 +35,30 @@ namespace OneDriveLink.Processors
                     string encodedUrl = OneDriveUrlExtractor.ExtractEncodedUrl(initialUri);
                     if (string.IsNullOrEmpty(encodedUrl))
                     {
-                        if (!isArgumentMode) Console.WriteLine("No valid share identifier found in the URL.");
+                        Logger.LogInfo("No valid share identifier found in the URL.", isArgumentMode);
                         return;
                     }
                     string apiUrl = $"https://api.onedrive.com/v1.0/shares/{encodedUrl}/root/content";
-                    if (!isArgumentMode) Console.WriteLine("API URL: " + apiUrl);
+                    Logger.LogInfo("API URL: " + apiUrl, isArgumentMode);
 
                     string downloadUrl = await RedirectUrlProcessor.GetDownloadUrlAsync(initialUri);
                     if (!string.IsNullOrEmpty(downloadUrl))
                     {
-                        if (!isArgumentMode)
-                        {
-                            Console.WriteLine("Download URL: " + downloadUrl);
-                        }
-                        else
-                        {
-                            Console.WriteLine(downloadUrl);
-                        }
+                        Logger.LogUrl(downloadUrl, isArgumentMode);
                     }
                     else
                     {
-                        if (!isArgumentMode) Console.WriteLine("Failed to resolve download URL for: " + inputUrl);
+                        Logger.LogError("Failed to resolve download URL for: " + initialUri, isArgumentMode);
                     }
                 }
                 else
                 {
-                    if (!isArgumentMode) Console.WriteLine("The provided URL does not match known OneDrive or SharePoint patterns.");
+                    Logger.LogError("The provided URL does not match known OneDrive or SharePoint patterns.", isArgumentMode);
                 }
             }
             catch (Exception ex)
             {
-                if (!isArgumentMode)
-                {
-                    Console.WriteLine($"An error occurred while processing the URL: {inputUrl}. Error: {ex.Message}");
-                }
-                else
-                {
-                    Console.Error.WriteLine($"Error processing URL: {inputUrl}. Error: {ex.Message}");
-                }
+                Logger.LogError($"An error occurred while processing the URL: {inputUrl}. Error: {ex.Message}", isArgumentMode);
             }
         }
     }

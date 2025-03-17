@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using OneDriveLink.Helpers;
 using OneDriveLink.Processors;
 
 namespace OneDriveLink
@@ -8,6 +9,9 @@ namespace OneDriveLink
     {
         private static bool isArgumentMode = false;
 
+        /// <summary>
+        /// Main entry point for the application.
+        /// </summary>
         private static async Task Main(string[] args)
         {
             if (args.Length > 0)
@@ -23,7 +27,7 @@ namespace OneDriveLink
                 Console.Write("Please enter shared URL (OneDrive/SharePoint): ");
                 string? inputUrl = Console.ReadLine()?.Trim();
                 await UrlProcessor.ProcessUrl(inputUrl, isArgumentMode);
-                Console.WriteLine("Press any key to exit...");
+                Logger.LogInfo("Press any key to exit...", isArgumentMode);
                 Console.ReadKey();
             }
             else
@@ -33,7 +37,7 @@ namespace OneDriveLink
                 {
                     await UrlProcessor.ProcessUrl(input.Trim(), isArgumentMode);
                 }
-                Console.WriteLine("Press any key to exit...");
+                Logger.LogInfo("Press any key to exit...", isArgumentMode);
                 Console.ReadKey();
             }
         }
