@@ -28,7 +28,7 @@ namespace OneDriveLink.Processors
             {
                 response = await client.GetAsync(initialUri);
             }
-            catch (HttpRequestException ex)
+            catch (HttpRequestException)
             {
                 return string.Empty;
             }

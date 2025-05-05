@@ -23,6 +23,7 @@ namespace OneDriveLink.Helpers
         /// Determines if a given URI is a SharePoint link.
         /// Expected patterns include:
         ///   - https://1drv.ms/u/c/...
+        ///   - https://1drv.ms/b/c/...
         ///   - https://1drv.ms/t/...
         ///   - https://1drv.ms/f/...
         /// </summary>
@@ -40,6 +41,7 @@ namespace OneDriveLink.Helpers
             {
                 "t" => true,
                 "f" => true,
+                "b" => segments[1].Equals("c", StringComparison.OrdinalIgnoreCase),
                 "u" => segments[1].Equals("c", StringComparison.OrdinalIgnoreCase),
                 _ => false,
             };
