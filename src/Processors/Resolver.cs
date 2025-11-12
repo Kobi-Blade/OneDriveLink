@@ -1,15 +1,12 @@
-using System;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 using OneDriveLink.Helpers;
 using OneDriveLink.Models;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace OneDriveLink.Processors
 {
-    public static class SharePointLinkProcessor
+    public static class Resolver
     {
         private static readonly Uri ApiEntryPoint = new Uri("https://api.onedrive.com/v1.0/drives/");
         private static readonly Uri PersonalApiEntryPoint = new Uri("https://my.microsoftpersonalcontent.com/_api/v2.0/shares/");
@@ -17,23 +14,20 @@ namespace OneDriveLink.Processors
         private const string AppId = "1141147648";
         private const string AppUuid = "5cbed6ac-a083-4e14-b191-b4ba07653de2";
 
-        /// <summary>
-        /// Resolves the SharePoint URL by following redirects and processing the response.
-        /// </summary>
-        public static async Task ProcessSharePointUrlAsync(Uri url, bool isArgumentMode = false)
+        public static async Task ProcessAsync(Uri url, bool isArgumentMode = false)
         {
             try
             {
-                var finalUrl = await FollowRedirectsAsync(url, isArgumentMode);
-                var accessDetails = SharePointAccessDetails.FromUri(finalUrl);
+                var finalUrl = await FollowAsync(url, isArgumentMode);
+                var accessInfo = AccessInfo.FromUri(finalUrl);
                 using var client = new HttpClient();
 
-                if (!string.IsNullOrEmpty(accessDetails.Redeem))
+                if (!string.IsNullOrEmpty(accessInfo.Redeem))
                 {
-                    await GetBadgerTokenAsync(client, isArgumentMode);
+                    await AcquireTokenAsync(client, isArgumentMode);
                 }
 
-                var apiUrl = CreateApiUrl(accessDetails);
+                var apiUrl = BuildApiUrl(accessInfo);
                 Logger.LogInfo($"API URL: {apiUrl}", isArgumentMode);
 
                 var response = await client.GetAsync(apiUrl);
@@ -60,10 +54,7 @@ namespace OneDriveLink.Processors
             }
         }
 
-        /// <summary>
-        /// Follows redirects for the provided URL and returns the final resolved URI.
-        /// </summary>
-        private static async Task<Uri> FollowRedirectsAsync(Uri url, bool isArgumentMode)
+        private static async Task<Uri> FollowAsync(Uri url, bool isArgumentMode)
         {
             using var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true });
             HttpResponseMessage response;
@@ -81,7 +72,7 @@ namespace OneDriveLink.Processors
             return response.RequestMessage?.RequestUri ?? url;
         }
 
-        private static Uri CreateApiUrl(SharePointAccessDetails details)
+        private static Uri BuildApiUrl(AccessInfo details)
         {
             if (!string.IsNullOrEmpty(details.Redeem))
             {
@@ -93,7 +84,7 @@ namespace OneDriveLink.Processors
 
             if (!string.IsNullOrEmpty(details.AuthKey))
             {
-                var query = new System.Collections.Generic.Dictionary<string, string?> { { "authkey", details.AuthKey } };
+                var query = new Dictionary<string, string?> { { "authkey", details.AuthKey } };
                 var urlWithQuery = QueryHelpers.AddQueryString(baseUri.ToString(), query);
                 return new Uri(urlWithQuery);
             }
@@ -101,10 +92,7 @@ namespace OneDriveLink.Processors
             return baseUri;
         }
 
-        /// <summary>
-        /// Retrieves the Badger token for authentication.
-        /// </summary>
-        private static async Task GetBadgerTokenAsync(HttpClient client, bool isArgumentMode)
+        private static async Task AcquireTokenAsync(HttpClient client, bool isArgumentMode)
         {
             client.DefaultRequestHeaders.Remove("AppId");
             client.DefaultRequestHeaders.Add("AppId", AppId);

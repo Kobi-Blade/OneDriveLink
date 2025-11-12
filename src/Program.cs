@@ -1,33 +1,30 @@
-﻿using System;
-using System.Threading.Tasks;
-using OneDriveLink.Helpers;
+﻿using OneDriveLink.Helpers;
 using OneDriveLink.Processors;
 
 namespace OneDriveLink
 {
     class Program
     {
-        private static bool isArgumentMode = false;
-
-        /// <summary>
-        /// Main entry point for the application.
-        /// </summary>
-        private static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
-            if (args.Length > 0)
+            bool isArgumentMode = args.Length > 0;
+
+            if (isArgumentMode)
             {
-                isArgumentMode = true;
                 foreach (var url in args)
                 {
-                    await UrlProcessor.ProcessUrl(url, isArgumentMode);
+                    await Dispatcher.ExecuteAsync(url, true);
                 }
             }
             else if (!Console.IsInputRedirected)
             {
-                Console.Write("Please enter shared URL (OneDrive/SharePoint): ");
-                string? inputUrl = Console.ReadLine()?.Trim();
-                await UrlProcessor.ProcessUrl(inputUrl, isArgumentMode);
-                Logger.LogInfo("Press any key to exit...", isArgumentMode);
+                Console.Write("Please enter OneDrive URL: ");
+                var inputUrl = Console.ReadLine()?.Trim();
+
+                if (!string.IsNullOrEmpty(inputUrl))
+                    await Dispatcher.ExecuteAsync(inputUrl, false);
+
+                Logger.LogInfo("Press any key to exit...", false);
                 Console.ReadKey();
             }
             else
@@ -35,9 +32,12 @@ namespace OneDriveLink
                 string? input;
                 while ((input = Console.ReadLine()) != null)
                 {
-                    await UrlProcessor.ProcessUrl(input.Trim(), isArgumentMode);
+                    var trimmed = input.Trim();
+                    if (!string.IsNullOrEmpty(trimmed))
+                        await Dispatcher.ExecuteAsync(trimmed, false);
                 }
-                Logger.LogInfo("Press any key to exit...", isArgumentMode);
+
+                Logger.LogInfo("Press any key to exit...", false);
                 Console.ReadKey();
             }
         }

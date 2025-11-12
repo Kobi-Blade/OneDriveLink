@@ -4,7 +4,7 @@ A simple C# console application that processes a user-provided URL into a direct
 
 ## Prerequisites
 
-- [.NET 8.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0/runtime)
+- [.NET 10.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0/runtime)
 
 ## Features
 
@@ -61,7 +61,7 @@ Contributions are welcome! Please open an issue or submit a pull request on GitH
 
 ### Build Project
 
-This is a .NET 8.0 project and it ensures platform-independent practices for full Linux support. To compile, use the following command:
+This is a .NET 10.0 project and it ensures platform-independent practices for full Linux support. To compile, use the following command:
 
 ```bash
 dotnet build
