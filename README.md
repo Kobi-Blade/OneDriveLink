@@ -64,5 +64,11 @@ Contributions are welcome! Please open an issue or submit a pull request on GitH
 This is a .NET 10.0 project and it ensures platform-independent practices for full Linux support. To compile, use the following command:
 
 ```bash
-dotnet build
+dotnet publish --os win --no-self-contained -p:PublishSingleFile=true
+```
+
+For Linux,
+
+```bash
+dotnet publish --os linux --no-self-contained -p:PublishSingleFile=true
 ```
