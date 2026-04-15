@@ -1,38 +1,37 @@
+namespace OneDriveLink.Processors;
+
 using OneDriveLink.Helpers;
 
-namespace OneDriveLink.Processors
+public static class Dispatcher
 {
-    public static class Dispatcher
+    public static async Task ExecuteAsync(string? inputUrl, bool isArgumentMode)
     {
-        public static async Task ExecuteAsync(string? inputUrl, bool isArgumentMode)
+        try
         {
-            try
+            if (string.IsNullOrWhiteSpace(inputUrl))
             {
-                if (string.IsNullOrEmpty(inputUrl))
-                {
-                    Logger.LogInfo("No URL entered.", isArgumentMode);
-                    return;
-                }
-
-                if (!Uri.TryCreate(inputUrl, UriKind.Absolute, out Uri? initialUri))
-                {
-                    Logger.LogInfo("Invalid URL entered.", isArgumentMode);
-                    return;
-                }
-
-                if (LinkValidator.IsValidLink(initialUri))
-                {
-                    await Resolver.ProcessAsync(initialUri, isArgumentMode);
-                }
-                else
-                {
-                    Logger.LogError("The provided URL does not match known OneDrive patterns.", isArgumentMode);
-                }
+                Logger.LogInfo("No URL entered.", isArgumentMode);
+                return;
             }
-            catch (Exception ex)
+
+            if (!Uri.TryCreate(inputUrl, UriKind.Absolute, out var initialUri))
             {
-                Logger.LogError($"An error occurred while processing the URL: {inputUrl}. Error: {ex.Message}", isArgumentMode);
+                Logger.LogInfo("Invalid URL entered.", isArgumentMode);
+                return;
             }
+
+            if (initialUri.Host.Equals("1drv.ms", StringComparison.OrdinalIgnoreCase))
+            {
+                await Resolver.ProcessAsync(initialUri, isArgumentMode);
+            }
+            else
+            {
+                Logger.LogError("The provided URL does not match known OneDrive patterns.", isArgumentMode);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"An error occurred while processing the URL: {inputUrl}. Error: {ex.Message}", isArgumentMode);
         }
     }
 }
